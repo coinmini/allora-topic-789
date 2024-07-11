@@ -18,6 +18,7 @@ def get_token_inference(token):
 
 @app.route("/inference/<string:token>")
 def generate_inference(token):
+    """Generate inference for given token."""
     if not token or token not in ["ETH", "BTC", "SOL"]:
         error_msg = "Token is required" if not token else "Token not supported"
         return Response(json.dumps({"error": error_msg}), status=400, mimetype='application/json')
@@ -30,6 +31,7 @@ def generate_inference(token):
 
 @app.route("/update")
 def update():
+    """Update data and return status."""
     try:
         update_data()
         return "0"
@@ -38,4 +40,4 @@ def update():
 
 if __name__ == "__main__":
     update_data()
-    app.run(host="0.0.0.0", port=8010)
+    app.run(host="0.0.0.0", port=8011)
