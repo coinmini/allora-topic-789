@@ -2,19 +2,20 @@ version: '3'
 
 services:
   inference:
-    container_name: inference-basic-eth-pred
+    container_name: net1-worker1-inference
     build:
       context: .
     command: python -u /app/app.py
     ports:
-      - "8000:8000"
+      - "8010:8010"
     networks:
-      eth-model-local:
+      net1-worker1:
         aliases:
           - inference
-        ipv4_address: 172.22.0.4
+        ipv4_address: 172.31.0.2
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/inference/ETH"]
+      # test: ["CMD", "curl", "-f", "http://localhost:8010/inference/ETH"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8010/inference/ETH || exit 1 && curl -f http://localhost:8010/inference/BTC || exit 1 && curl -f http://localhost:8010/inference/SOL || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -22,60 +23,30 @@ services:
       - ./inference-data:/app/data
   
   updater:
-    container_name: updater-basic-eth-pred
+    container_name: net1-updater
     build: .
     environment:
-      - INFERENCE_API_ADDRESS=http://inference:8000
+      - INFERENCE_API_ADDRESS=http://inference:8010
     command: >
       sh -c "
       while true; do
         python -u /app/update_app.py;
-        sleep 24h;
+        sleep 12h;
       done
       "
     depends_on:
       inference:
         condition: service_healthy
     networks:
-      eth-model-local:
+      net1-worker1:
         aliases:
           - updater
-        ipv4_address: 172.22.0.5
-  
-  head:
-    container_name: head-basic-eth-pred
-    image: alloranetwork/allora-inference-base-head:latest
+        ipv4_address: 172.31.0.3
+    
+  worker_topic_1:
+    container_name: net1-worker1-topic-1
     environment:
-      - HOME=/data
-    entrypoint:
-      - "/bin/bash"
-      - "-c"
-      - |
-        if [ ! -f /data/keys/priv.bin ]; then
-          echo "Generating new private keys..."
-          mkdir -p /data/keys
-          cd /data/keys
-          allora-keys
-        fi
-        allora-node --role=head --peer-db=/data/peerdb --function-db=/data/function-db  \
-          --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
-          --private-key=/data/keys/priv.bin --log-level=debug --port=9010 --rest-api=:6000 \
-          --boot-nodes=/dns4/head-0-p2p.v2.testnet.allora.network/tcp/32130/p2p/12D3KooWGKY4z2iNkDMERh5ZD8NBoAX6oWzkDnQboBRGFTpoKNDF
-    ports:
-      - "6000:6000"
-    volumes:
-      - ./head-data:/data
-    working_dir: /data
-    networks:
-      eth-model-local:
-        aliases:
-          - head
-        ipv4_address: 172.22.0.100
-
-  worker:
-    container_name: worker-basic-eth-pred
-    environment:
-      - INFERENCE_API_ADDRESS=http://inference:8000
+      - INFERENCE_API_ADDRESS=http://inference:8010
       - HOME=/data
     build:
       context: .
@@ -90,34 +61,114 @@ services:
           cd /data/keys
           allora-keys
         fi
-        # Change boot-nodes below to the key advertised by your head
         allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
-          --private-key=/data/keys/priv.bin --log-level=debug --port=9011 \
-          --boot-nodes=/ip4/172.22.0.100/tcp/9010/p2p/head-id \
-          --topic=allora-topic-{allora-chain-topic-id}-worker --allora-chain-worker-mode=worker
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9101 \
+          --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
+          --topic=allora-topic-1-worker \
+          --allora-chain-key-name=net1_worker \
+          --allora-chain-restore-mnemonic='just clap slim ...' \
+          --allora-chain-topic-id=1 \
+          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-data:/data
+      - ./worker-topic-1-data:/data
     working_dir: /data
     depends_on:
       - inference
-      - head
+    ports:
+      - "9101:9101"
     networks:
-      eth-model-local:
+      net1-worker1:
         aliases:
-          - worker
-        ipv4_address: 172.22.0.10
+          - worker_topic_1
+        ipv4_address: 172.31.0.21
 
+  worker_topic_3:
+    container_name: net1-worker1-topic-3
+    environment:
+      - INFERENCE_API_ADDRESS=http://inference:8010
+      - HOME=/data
+    build:
+      context: .
+      dockerfile: Dockerfile_b7s
+    entrypoint:
+      - "/bin/bash"
+      - "-c"
+      - |
+        if [ ! -f /data/keys/priv.bin ]; then
+          echo "Generating new private keys..."
+          mkdir -p /data/keys
+          cd /data/keys
+          allora-keys
+        fi
+        allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
+          --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9103 \
+          --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
+          --topic=allora-topic-3-worker \
+          --allora-chain-key-name=net1_worker \
+          --allora-chain-restore-mnemonic='just clap slim ...' \
+          --allora-chain-topic-id=3 \
+          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-worker-mode=worker
+    volumes:
+      - ./worker-topic-3-data:/data
+    working_dir: /data
+    depends_on:
+      - inference
+    ports:
+      - "9103:9103"
+    networks:
+      net1-worker1:
+        aliases:
+          - worker_topic_3
+        ipv4_address: 172.31.0.23
 
+  worker_topic_5:
+    container_name: net1-worker1-topic-5
+    environment:
+      - INFERENCE_API_ADDRESS=http://inference:8010
+      - HOME=/data
+    build:
+      context: .
+      dockerfile: Dockerfile_b7s
+    entrypoint:
+      - "/bin/bash"
+      - "-c"
+      - |
+        if [ ! -f /data/keys/priv.bin ]; then
+          echo "Generating new private keys..."
+          mkdir -p /data/keys
+          cd /data/keys
+          allora-keys
+        fi
+        allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
+          --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9105 \
+          --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
+          --topic=allora-topic-5-worker \
+          --allora-chain-key-name=net1_worker \
+          --allora-chain-restore-mnemonic='just clap slim ...' \
+          --allora-chain-topic-id=5 \
+          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-worker-mode=worker
+    volumes:
+      - ./worker-topic-5-data:/data
+    working_dir: /data
+    depends_on:
+      - inference
+    ports:
+      - "9105:9105"
+    networks:
+      net1-worker1:
+        aliases:
+          - worker_topic_5
+        ipv4_address: 172.31.0.25
   
 networks:
-  eth-model-local:
+  net1-worker1:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.22.0.0/24
-
-volumes:
-  inference-data:
-  worker-data:
-  head-data:
+        - subnet: 172.31.0.0/24
