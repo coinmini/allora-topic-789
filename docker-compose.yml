@@ -19,6 +19,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+      start_period: 600s
     volumes:
       - ./inference-data:/app/data
   
