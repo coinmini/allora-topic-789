@@ -115,7 +115,7 @@ def train_model(token):
     max_price = np.max(forecast)
 
     # Chọn ngẫu nhiên một giá trị giữa giá thấp nhất và giá cao nhất, để tránh dự đoán giống nhau
-    price_predict = round(random.uniform(min_price, max_price), 4)
+    price_predict = random.uniform(min_price, max_price)
     forecast_price[token] = price_predict
 
     # median = np.median(forecast.numpy(), axis=1)

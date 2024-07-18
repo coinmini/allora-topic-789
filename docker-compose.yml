@@ -2,29 +2,29 @@ version: '3'
 
 services:
   inference:
-    container_name: net1-worker2-inference
+    container_name: net1-worker1-inference
     build:
       context: .
     command: python -u /app/app.py
     ports:
       - "8011:8011"
     networks:
-      net1-worker2:
+      net1-worker1:
         aliases:
           - inference
-        ipv4_address: 172.32.0.2
+        ipv4_address: 172.31.0.2
     healthcheck:
       # test: ["CMD", "curl", "-f", "http://localhost:8011/inference/ETH"]
       test: ["CMD-SHELL", "curl -f http://localhost:8011/inference/ETH || exit 1 && curl -f http://localhost:8011/inference/BTC || exit 1 && curl -f http://localhost:8011/inference/SOL || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 600s
+      start_period: 60s
     volumes:
       - ./inference-data:/app/data
   
   updater:
-    container_name: net1-updater2
+    container_name: net1-updater1
     build: .
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
@@ -39,13 +39,13 @@ services:
       inference:
         condition: service_healthy
     networks:
-      net1-worker2:
+      net1-worker1:
         aliases:
           - updater
-        ipv4_address: 172.32.0.3
+        ipv4_address: 172.31.0.3
     
-  worker_topic_2:
-    container_name: net1-worker2-topic-2
+  worker_topic_1:
+    container_name: net1-worker1-topic-1
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -64,29 +64,29 @@ services:
         fi
         allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
-          --private-key=/data/keys/priv.bin --log-level=debug --port=9102 \
-          --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32050/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
-          --topic=allora-topic-2-worker \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9101 \
+          --boot-nodes=/dns/head-0-p2p.testnet-1.testnet.allora.network/tcp/32130/p2p/12D3KooWLBhsSucVVcyVCaM9pvK8E7tWBM9L19s7XQHqqejyqgEC,/dns/head-1-p2p.testnet-1.testnet.allora.network/tcp/32131/p2p/12D3KooWEUNWg7YHeeCtH88ju63RBfY5hbdv9hpv84ffEZpbJszt,/dns/head-2-p2p.testnet-1.testnet.allora.network/tcp/32132/p2p/12D3KooWATfUSo95wtZseHbogpckuFeSvpL4yks6XtvrjVHcCCXk \
+          --topic=allora-topic-1-worker \
           --allora-chain-key-name=net1_worker \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=2 \
-          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-topic-id=1 \
+          --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-2-data:/data
+      - ./worker-topic-1-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9102:9102"
+      - "9101:9101"
     networks:
-      net1-worker2:
+      net1-worker1:
         aliases:
-          - worker_topic_2
-        ipv4_address: 172.32.0.21
+          - worker_topic_1
+        ipv4_address: 172.31.0.21
 
-  worker_topic_4:
-    container_name: net1-worker2-topic-4
+  worker_topic_3:
+    container_name: net1-worker1-topic-3
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -105,29 +105,29 @@ services:
         fi
         allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
-          --private-key=/data/keys/priv.bin --log-level=debug --port=9104 \
-          --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32050/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
-          --topic=allora-topic-4-worker \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9103 \
+          --boot-nodes=/dns/head-0-p2p.testnet-1.testnet.allora.network/tcp/32130/p2p/12D3KooWLBhsSucVVcyVCaM9pvK8E7tWBM9L19s7XQHqqejyqgEC,/dns/head-1-p2p.testnet-1.testnet.allora.network/tcp/32131/p2p/12D3KooWEUNWg7YHeeCtH88ju63RBfY5hbdv9hpv84ffEZpbJszt,/dns/head-2-p2p.testnet-1.testnet.allora.network/tcp/32132/p2p/12D3KooWATfUSo95wtZseHbogpckuFeSvpL4yks6XtvrjVHcCCXk \
+          --topic=allora-topic-3-worker \
           --allora-chain-key-name=net1_worker \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=4 \
-          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-topic-id=3 \
+          --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-4-data:/data
+      - ./worker-topic-3-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9104:9104"
+      - "9103:9103"
     networks:
-      net1-worker2:
+      net1-worker1:
         aliases:
-          - worker_topic_4
-        ipv4_address: 172.32.0.23
+          - worker_topic_3
+        ipv4_address: 172.31.0.23
 
-  worker_topic_6:
-    container_name: net1-worker2-topic-6
+  worker_topic_5:
+    container_name: net1-worker1-topic-5
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -146,30 +146,36 @@ services:
         fi
         allora-node --role=worker --peer-db=/data/peerdb --function-db=/data/function-db \
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
-          --private-key=/data/keys/priv.bin --log-level=debug --port=9106 \
+          --private-key=/data/keys/priv.bin --log-level=debug --port=9105 \
           --boot-nodes=/dns4/head-0-p2p.edgenet.allora.network/tcp/32050/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-0-p2p.edgenet.allora.network/tcp/32080/p2p/12D3KooWQgcJ4wiHBWE6H9FxZAVUn84ZAmywQdRk83op2EibWTiZ,/dns4/head-1-p2p.edgenet.allora.network/tcp/32081/p2p/12D3KooWCyao1YJ9DDZEAV8ZUZ1MLLKbcuxVNju1QkTVpanN9iku,/dns4/head-2-p2p.edgenet.allora.network/tcp/32082/p2p/12D3KooWKZYNUWBjnAvun6yc7EBnPvesX23e5F4HGkEk1p5Q7JfK \
-          --topic=allora-topic-6-worker \
+          --topic=allora-topic-5-worker \
           --allora-chain-key-name=net1_worker \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=6 \
-          --allora-node-rpc-address=https://allora-rpc.edgenet.allora.network \
+          --allora-chain-topic-id=5 \
+          --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-6-data:/data
+      - ./worker-topic-5-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9106:9106"
+      - "9105:9105"
     networks:
-      net1-worker2:
+      net1-worker1:
         aliases:
-          - worker_topic_6
-        ipv4_address: 172.32.0.25
+          - worker_topic_5
+        ipv4_address: 172.31.0.25
   
 networks:
-  net1-worker2:
+  net1-worker1:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.32.0.0/24
+        - subnet: 172.31.0.0/24
+
+volumes:
+  inference-data:
+  worker-topic-1-data:
+  worker-topic-3-data:
+  worker-topic-5-data:
