@@ -44,8 +44,13 @@ def format_data(token):
 
         if not zip_file_path.endswith(".zip"):
             continue
-
-        myzip = ZipFile(zip_file_path)
+        
+        try:
+            myzip = ZipFile(zip_file_path)
+        except:
+            print(f"Error reading {zip_file_path}")
+            continue
+        
         with myzip.open(myzip.filelist[0]) as f:
             line = f.readline()
             header = 0 if line.decode("utf-8").startswith("open_time") else None
