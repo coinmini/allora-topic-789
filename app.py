@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 def update_data():
     """Download price data, format data and train model."""
-    tokens = ["ETH", "BTC", "SOL"]
+    tokens = ["ETH", "BNB", "ARB"]
     for token in tokens:
         download_data(token)
         format_data(token)
@@ -19,7 +19,7 @@ def get_token_inference(token):
 @app.route("/inference/<string:token>")
 def generate_inference(token):
     """Generate inference for given token."""
-    if not token or token not in ["ETH", "BTC", "SOL"]:
+    if not token or token not in ["ETH", "BNB", "ARB"]:
         error_msg = "Token is required" if not token else "Token not supported"
         return Response(json.dumps({"error": error_msg}), status=400, mimetype='application/json')
 

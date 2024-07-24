@@ -129,7 +129,7 @@ def train_model(token):
     print(f"Forecasted price for {token}: {forecast_price[token]}")
 
 def update_data():
-    tokens = ["ETH", "BTC", "SOL"]
+    tokens = ["ETH", "BNB", "ARB"]
     for token in tokens:
         download_data(token)
         format_data(token)

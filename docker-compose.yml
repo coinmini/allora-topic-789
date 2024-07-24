@@ -15,7 +15,7 @@ services:
         ipv4_address: 172.31.0.2
     healthcheck:
       # test: ["CMD", "curl", "-f", "http://localhost:8011/inference/ETH"]
-      test: ["CMD-SHELL", "curl -f http://localhost:8011/inference/ETH || exit 1 && curl -f http://localhost:8011/inference/BTC || exit 1 && curl -f http://localhost:8011/inference/SOL || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8011/inference/ETH || exit 1 && curl -f http://localhost:8011/inference/BNB || exit 1 && curl -f http://localhost:8011/inference/ARB || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -44,8 +44,8 @@ services:
           - updater
         ipv4_address: 172.31.0.3
     
-  worker_topic_1:
-    container_name: net1-worker1-topic-1
+  worker_topic_7:
+    container_name: net1-worker1-topic-7
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -66,27 +66,27 @@ services:
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
           --private-key=/data/keys/priv.bin --log-level=debug --port=9101 \
           --boot-nodes=/dns/head-0-p2p.testnet-1.testnet.allora.network/tcp/32130/p2p/12D3KooWLBhsSucVVcyVCaM9pvK8E7tWBM9L19s7XQHqqejyqgEC,/dns/head-1-p2p.testnet-1.testnet.allora.network/tcp/32131/p2p/12D3KooWEUNWg7YHeeCtH88ju63RBfY5hbdv9hpv84ffEZpbJszt,/dns/head-2-p2p.testnet-1.testnet.allora.network/tcp/32132/p2p/12D3KooWATfUSo95wtZseHbogpckuFeSvpL4yks6XtvrjVHcCCXk,/dns/head-5-p2p.testnet-1.testnet.allora.network/tcp/32135/p2p/12D3KooWAazxKoYszYt4XhCrGWoEUyAFMaU7DB9RZ8TsA7qwLfin,/dns/head-4-p2p.testnet-1.testnet.allora.network/tcp/32134/p2p/12D3KooWRF8HNU21AukE7KC6kZqxqvCiZ5nM9xcLW4YvsuGAYbcm,/dns/head-3-p2p.testnet-1.testnet.allora.network/tcp/32133/p2p/12D3KooWDrArwBSCNxwL3mgJ2NaUygdtPtiwVQtPJafyAH6FSiUf \
-          --topic=allora-topic-1-worker \
-          --allora-chain-key-name=net1_worker \
+          --topic=allora-topic-7-worker \
+          --allora-chain-key-name=testkey \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=1 \
+          --allora-chain-topic-id=7 \
           --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-1-data:/data
+      - ./worker-topic-7-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9101:9101"
+      - "9107:9107"
     networks:
       net1-worker1:
         aliases:
-          - worker_topic_1
+          - worker_topic_7
         ipv4_address: 172.31.0.21
 
-  worker_topic_3:
-    container_name: net1-worker1-topic-3
+  worker_topic_8:
+    container_name: net1-worker1-topic-8
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -107,27 +107,27 @@ services:
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
           --private-key=/data/keys/priv.bin --log-level=debug --port=9103 \
           --boot-nodes=/dns/head-0-p2p.testnet-1.testnet.allora.network/tcp/32130/p2p/12D3KooWLBhsSucVVcyVCaM9pvK8E7tWBM9L19s7XQHqqejyqgEC,/dns/head-1-p2p.testnet-1.testnet.allora.network/tcp/32131/p2p/12D3KooWEUNWg7YHeeCtH88ju63RBfY5hbdv9hpv84ffEZpbJszt,/dns/head-2-p2p.testnet-1.testnet.allora.network/tcp/32132/p2p/12D3KooWATfUSo95wtZseHbogpckuFeSvpL4yks6XtvrjVHcCCXk,/dns/head-5-p2p.testnet-1.testnet.allora.network/tcp/32135/p2p/12D3KooWAazxKoYszYt4XhCrGWoEUyAFMaU7DB9RZ8TsA7qwLfin,/dns/head-4-p2p.testnet-1.testnet.allora.network/tcp/32134/p2p/12D3KooWRF8HNU21AukE7KC6kZqxqvCiZ5nM9xcLW4YvsuGAYbcm,/dns/head-3-p2p.testnet-1.testnet.allora.network/tcp/32133/p2p/12D3KooWDrArwBSCNxwL3mgJ2NaUygdtPtiwVQtPJafyAH6FSiUf \
-          --topic=allora-topic-3-worker \
-          --allora-chain-key-name=net1_worker \
+          --topic=allora-topic-8-worker \
+          --allora-chain-key-name=testkey \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=3 \
+          --allora-chain-topic-id=8 \
           --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-3-data:/data
+      - ./worker-topic-8-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9103:9103"
+      - "9108:9108"
     networks:
       net1-worker1:
         aliases:
-          - worker_topic_3
+          - worker_topic_8
         ipv4_address: 172.31.0.23
 
-  worker_topic_5:
-    container_name: net1-worker1-topic-5
+  worker_topic_9:
+    container_name: net1-worker1-topic-9
     environment:
       - INFERENCE_API_ADDRESS=http://inference:8011
       - HOME=/data
@@ -148,23 +148,23 @@ services:
           --runtime-path=/app/runtime --runtime-cli=bls-runtime --workspace=/data/workspace \
           --private-key=/data/keys/priv.bin --log-level=debug --port=9105 \
           --boot-nodes=/dns/head-0-p2p.testnet-1.testnet.allora.network/tcp/32130/p2p/12D3KooWLBhsSucVVcyVCaM9pvK8E7tWBM9L19s7XQHqqejyqgEC,/dns/head-1-p2p.testnet-1.testnet.allora.network/tcp/32131/p2p/12D3KooWEUNWg7YHeeCtH88ju63RBfY5hbdv9hpv84ffEZpbJszt,/dns/head-2-p2p.testnet-1.testnet.allora.network/tcp/32132/p2p/12D3KooWATfUSo95wtZseHbogpckuFeSvpL4yks6XtvrjVHcCCXk,/dns/head-5-p2p.testnet-1.testnet.allora.network/tcp/32135/p2p/12D3KooWAazxKoYszYt4XhCrGWoEUyAFMaU7DB9RZ8TsA7qwLfin,/dns/head-4-p2p.testnet-1.testnet.allora.network/tcp/32134/p2p/12D3KooWRF8HNU21AukE7KC6kZqxqvCiZ5nM9xcLW4YvsuGAYbcm,/dns/head-3-p2p.testnet-1.testnet.allora.network/tcp/32133/p2p/12D3KooWDrArwBSCNxwL3mgJ2NaUygdtPtiwVQtPJafyAH6FSiUf \
-          --topic=allora-topic-5-worker \
-          --allora-chain-key-name=net1_worker \
+          --topic=allora-topic-9-worker \
+          --allora-chain-key-name=testkey \
           --allora-chain-restore-mnemonic='just clap slim ...' \
-          --allora-chain-topic-id=5 \
+          --allora-chain-topic-id=9 \
           --allora-node-rpc-address=https://allora-rpc.testnet-1.testnet.allora.network \
           --allora-chain-worker-mode=worker
     volumes:
-      - ./worker-topic-5-data:/data
+      - ./worker-topic-9-data:/data
     working_dir: /data
     depends_on:
       - inference
     ports:
-      - "9105:9105"
+      - "9109:9109"
     networks:
       net1-worker1:
         aliases:
-          - worker_topic_5
+          - worker_topic_9
         ipv4_address: 172.31.0.25
   
 networks:
