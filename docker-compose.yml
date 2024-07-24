@@ -176,6 +176,6 @@ networks:
 
 volumes:
   inference-data:
-  worker-topic-1-data:
-  worker-topic-3-data:
-  worker-topic-5-data:
+  worker-topic-7-data:
+  worker-topic-8-data:
+  worker-topic-9-data:
